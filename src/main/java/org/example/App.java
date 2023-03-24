@@ -6,6 +6,13 @@ package org.example;
 public class App {
 
   public static void main(String[] args) {
-    System.out.println("Hello World!");
+    ConsoleMenu menu = createConsoleMenu();
+    menu.run();
+  }
+
+  private static ConsoleMenu createConsoleMenu() {
+    ConsoleMenu menu = new ConsoleMenu();
+
+    return menu;
   }
 }
