@@ -5,7 +5,7 @@ CREATE TABLE equation{
 
 CREATE TABLE root {
     root_id SERIAL PRIMARY key,
-    root double precision
+    number double precision
 }
 
 CREATE TABLE equation_root (
