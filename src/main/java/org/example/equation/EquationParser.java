@@ -1,4 +1,4 @@
-package org.example;
+package org.example.equation;
 
 import java.util.LinkedList;
 import java.util.regex.Matcher;
@@ -6,32 +6,28 @@ import java.util.regex.Pattern;
 
 public class EquationParser {
 
-  private String equation;
-  private EquationNode root;
+  private final String equation;
+  private EquationNode head;
+
+  private double root;
 
   public EquationParser(String equation) {
     this.equation = equation;
-    this.root = null;
+    this.head = null;
   }
 
-  public double solve(double x) {
-    if (this.root == null) {
-      this.root = parseEquation(this.equation);
+  public boolean isRoot(double x) {
+    root = x;
+    if (this.head == null) {
+      this.head = parseEquation();
     }
-    this.root.setValue(x);
-    return this.root.getValue();
+    return head.getValue() == 0;
   }
 
-  public boolean hasOtherRoot(double x) {
-    double value = solve(x);
-    return value == 0;
-  }
-
-  private EquationNode parseEquation(String equation) {
+  public EquationNode parseEquation() {
     LinkedList<EquationNode> nodes = new LinkedList<>();
     LinkedList<Operator> operators = new LinkedList<>();
-
-    Pattern pattern = Pattern.compile("(\\d*\\.\\d+|\\d+|[a-zA-Z])");
+    Pattern pattern = Pattern.compile("(\\d*\\.\\d+|\\d+|[xX]|[()+\\-*/=])");
     Matcher matcher = pattern.matcher(equation);
 
     while (matcher.find()) {
@@ -43,6 +39,16 @@ public class EquationParser {
         nodes.add(new EquationNode(value));
       } else if (Character.isLetter(firstChar)) {
         nodes.add(new EquationNode(token.charAt(0)));
+      } else if (firstChar == '(') {
+        operators.add(Operator.OPEN_PARENTHESIS);
+      } else if (firstChar == ')') {
+        while (!operators.isEmpty() && operators.getLast() != Operator.OPEN_PARENTHESIS) {
+          Operator lastOperator = operators.removeLast();
+          EquationNode right = nodes.removeLast();
+          EquationNode left = nodes.removeLast();
+          nodes.add(new EquationNode(lastOperator, left, right));
+        }
+        operators.removeLast();
       } else {
         Operator operator = Operator.fromToken(token);
         while (!operators.isEmpty() && operator.hasPrecedence(operators.getLast())) {
@@ -65,14 +71,18 @@ public class EquationParser {
     return nodes.getLast();
   }
 
-  private static class EquationNode {
+  public String getEquation() {
+    return equation;
+  }
+
+  public class EquationNode {
 
     private double value;
     private boolean solved;
-    private char variable;
-    private Operator operator;
-    private EquationNode left;
-    private EquationNode right;
+    private final char variable;
+    private final Operator operator;
+    private final EquationNode left;
+    private final EquationNode right;
 
     public EquationNode(double value) {
       this.value = value;
@@ -102,6 +112,9 @@ public class EquationParser {
     }
 
     public double getValue() {
+      if (this.variable != '\0') {
+        return root;
+      }
       if (!this.solved) {
         double leftValue = this.left.getValue();
         double rightValue = this.right.getValue();
@@ -111,48 +124,56 @@ public class EquationParser {
       return this.value;
     }
 
-    public void setValue(double value) {
-      if (this.variable != '\0') {
-        this.value = value;
-        this.solved = true;
-      }
-    }
-
-    public boolean isSolved() {
-      return this.solved;
-    }
   }
 
-  private static enum Operator {
-    ADD("+", 1) {
+  private enum Operator {
+    ADD("+", 3) {
       @Override
       public double apply(double left, double right) {
+        System.out.println(left + " + " + right);
         return left + right;
       }
     },
-    SUBTRACT("-", 1) {
+    SUBTRACT("-", 3) {
       @Override
       public double apply(double left, double right) {
+        System.out.println(left + " - " + right);
         return left - right;
       }
     },
     MULTIPLY("*", 2) {
       @Override
       public double apply(double left, double right) {
+        System.out.println(left + " * " + right);
         return left * right;
       }
     },
     DIVIDE("/", 2) {
       @Override
       public double apply(double left, double right) {
+        System.out.println(left + "/" + right);
         return left / right;
+      }
+    },
+
+    EQUALS("=", 4) {
+      @Override
+      public double apply(double left, double right) {
+        System.out.println(left + " - " + right);
+        return left - right;
+      }
+    },
+    OPEN_PARENTHESIS("(", 1) {
+      @Override
+      public double apply(double left, double right) {
+        return 0;
       }
     };
 
     private final String token;
     private final int precedence;
 
-    private Operator(String token, int precedence) {
+    Operator(String token, int precedence) {
       this.token = token;
       this.precedence = precedence;
     }
@@ -164,18 +185,14 @@ public class EquationParser {
     }
 
     public static Operator fromToken(String token) {
-      switch (token) {
-        case "+":
-          return ADD;
-        case "-":
-          return SUBTRACT;
-        case "*":
-          return MULTIPLY;
-        case "/":
-          return DIVIDE;
-        default:
-          throw new IllegalArgumentException("Invalid operator token: " + token);
-      }
+      return switch (token) {
+        case "+" -> ADD;
+        case "-" -> SUBTRACT;
+        case "*" -> MULTIPLY;
+        case "/" -> DIVIDE;
+        case "=" -> EQUALS;
+        default -> throw new IllegalArgumentException("Invalid operator token: " + token);
+      };
     }
   }
 }
