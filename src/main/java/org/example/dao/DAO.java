@@ -2,9 +2,11 @@ package org.example.dao;
 
 public interface DAO {
 
-  boolean create(String value);
+  long create(String value);
 
-  long getId(String value);
+  long getIdByValue(String value);
+
+  boolean saveRoot(Long equationId, Long rootId);
 
 
 }

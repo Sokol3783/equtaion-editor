@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import org.example.dao.DAO;
+import org.example.dao.EquationAnalytics;
+import org.example.dao.EquationAnalyticsimpl;
 import org.example.dao.EquationDAOimpl;
 import org.example.dao.EquationRootDAOImpl;
 import org.example.equation.EquationMatcher;
@@ -30,9 +32,38 @@ public class ConsoleMenu {
     menu.addCommand("Enter equation", menu.parseEquation());
     menu.addCommand("Save equation", menu.saveEquation());
     menu.addCommand("Save root", menu.saveEquationRoot());
+    menu.addCommand("Print all unique roots", menu.printUniqueRoots());
+    menu.addCommand("Print all equations with root", menu.printAllEquationsWithRoot());
     menu.addCommand("Print", menu.printMenu());
 
     return menu;
+  }
+
+  private Runnable printAllEquationsWithRoot() {
+    return () -> {
+      if (scanner.hasNextDouble()) {
+        EquationAnalytics analytics = new EquationAnalyticsimpl();
+        List<String> allEquationWithRoot = analytics.findAllEquationWithRoot(
+            scanner.nextDouble());
+        if (!allEquationWithRoot.isEmpty()) {
+          allEquationWithRoot.forEach(System.out::println);
+        } else {
+          System.out.println("There are no solved equations");
+        }
+      }
+    };
+  }
+
+  private Runnable printUniqueRoots() {
+    return () -> {
+      EquationAnalytics analytics = new EquationAnalyticsimpl();
+      List<Double> roots = analytics.findAllUniqueRoots();
+      if (!roots.isEmpty()) {
+        roots.forEach(System.out::println);
+      } else {
+        System.out.println("There are no unique roots");
+      }
+    };
   }
 
   private Runnable saveEquationRoot() {
@@ -42,8 +73,10 @@ public class ConsoleMenu {
         if (scanner.hasNextDouble()) {
           double i = Double.parseDouble(scanner.nextLine());
           if (parser.isRoot(i)) {
-            DAO dao = new EquationRootDAOImpl();
-            dao.create(String.valueOf(i));
+            DAO daoRoots = new EquationRootDAOImpl();
+            DAO daoEquation = new EquationRootDAOImpl();
+            daoEquation.saveRoot(daoEquation.getIdByValue(parser.getEquation()),
+                daoRoots.create(String.valueOf(i)));
           } else {
             System.out.println("It's not valid root!");
           }
