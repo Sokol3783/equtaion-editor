@@ -1,4 +1,4 @@
-package org.example;
+package org.example.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -6,14 +6,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class EquationDAOimpl implements DAO {
 
-  private static Map<String, Long> cache = new HashMap<>();
+  private static final Map<String, Long> cache = new HashMap<>();
 
-  private static String INSERT = "INSERT INTO equation (record) VALUES (?) ON CONFLICT (equation) DO UPDATE SET equation = excluded.equation RETURNING equation_id";
-  private static String GET = "SELECT record FROM equation WHERE equation_id = ?";
+  private static final String INSERT = "INSERT INTO equation (record) VALUES (?) ON CONFLICT (equation) DO UPDATE SET equation = excluded.equation RETURNING equation_id";
+  private static final String GET = "SELECT record FROM equation WHERE equation_id = ?";
 
   @Override
   public boolean create(String value) {
@@ -30,7 +29,7 @@ public class EquationDAOimpl implements DAO {
         return true;
       }
     } catch (SQLException e) {
-      System.out.println(e.getMessage());
+      System.out.println("Equation doesn't save");
     }
     return false;
   }
@@ -53,13 +52,5 @@ public class EquationDAOimpl implements DAO {
       System.out.println(e.getMessage());
     }
     throw new RuntimeException("Equation didn't save!");
-  }
-
-  private String getKeyByValue(long id) {
-    return cache.entrySet()
-        .stream()
-        .filter(entry -> Objects.equals(entry.getValue(), id))
-        .map(s -> s.getKey().toString())
-        .findFirst().get();
   }
 }
