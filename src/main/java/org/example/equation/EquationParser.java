@@ -1,5 +1,7 @@
 package org.example.equation;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -130,40 +132,35 @@ public class EquationParser {
     ADD("+", 3) {
       @Override
       public double apply(double left, double right) {
-        System.out.println(left + " + " + right);
-        return left + right;
+        return round(left + right);
       }
     },
     SUBTRACT("-", 3) {
       @Override
       public double apply(double left, double right) {
-        System.out.println(left + " - " + right);
-        return left - right;
+        return round(left - right);
       }
     },
     MULTIPLY("*", 2) {
       @Override
       public double apply(double left, double right) {
-        System.out.println(left + " * " + right);
-        return left * right;
+        return round(left * right);
       }
     },
     DIVIDE("/", 2) {
       @Override
       public double apply(double left, double right) {
-        System.out.println(left + "/" + right);
-        return left / right;
+        return round(left / right);
       }
     },
 
-    EQUALS("=", 4) {
+    EQUALS("=", 5) {
       @Override
       public double apply(double left, double right) {
-        System.out.println(left + " - " + right);
-        return left - right;
+        return round(left - right);
       }
     },
-    OPEN_PARENTHESIS("(", 1) {
+    OPEN_PARENTHESIS("(", 4) {
       @Override
       public double apply(double left, double right) {
         return 0;
@@ -182,6 +179,12 @@ public class EquationParser {
 
     public boolean hasPrecedence(Operator other) {
       return this.precedence >= other.precedence;
+    }
+
+    public double round(double value) {
+      BigDecimal result = new BigDecimal(value);
+      result = result.setScale(3, RoundingMode.HALF_UP);
+      return result.doubleValue();
     }
 
     public static Operator fromToken(String token) {

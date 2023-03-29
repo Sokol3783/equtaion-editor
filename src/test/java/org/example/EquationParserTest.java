@@ -17,7 +17,7 @@ class EquationParserTest {
       "x*x-1=3, -2",
       "2*x-1.5=3, 2.25",
       "(2*x)+5=17, 6",
-      "(5*x -1)/(2-2*x)=10, 44"
+      "(5*x -1)/(2-2*x)=10, 0.84"
   })
   void parseEquation(String input, double root) {
     EquationParser parser = new EquationParser(input);
